@@ -1,41 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  View,
-  Image,
-  TouchableOpacity,
-  Text,
-  Modal,
-  StyleSheet,
-  Pressable,
-  Animated,
-} from "react-native";
-import { useViewToggle } from "../../../context/ViewToggleContext";
+import { View, Image, Text, StyleSheet } from "react-native";
 
 export default function UserLayout() {
-  const { showPending, toggleView } = useViewToggle();
   const [time, setTime] = useState("");
-  const [menuVisible, setMenuVisible] = useState(false);
-  const slideAnim = useState(new Animated.Value(300))[0];
-  const [pressed, setPressed] = useState(null);
-  const [showFavorites, setShowFavorites] = useState(false);
-  const [showRecent, setShowRecent] = useState(false);
-  const [scale, setScale] = useState(new Animated.Value(1));
-
-  const handlePressIn = () => {
-    Animated.spring(scale, {
-      toValue: 1.1,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -54,36 +23,6 @@ export default function UserLayout() {
 
     return () => clearInterval(interval);
   }, []);
-
-  const toggleMenu = () => {
-    if (menuVisible) {
-      Animated.timing(slideAnim, {
-        toValue: 300,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => setMenuVisible(false));
-    } else {
-      setMenuVisible(true);
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
-  const handlePress = (item) => {
-    setPressed(item);
-    if (item === "favorite") {
-      setShowFavorites(!showFavorites);
-      setShowRecent(false);
-    } else if (item === "recent") {
-      setShowRecent(!showRecent);
-      setShowFavorites(false);
-    } else if (item === "view") {
-      toggleView();
-    }
-  };
 
   return (
     <>
@@ -150,16 +89,6 @@ export default function UserLayout() {
                 />
               </View>
             ),
-            headerRight: () => (
-              <TouchableOpacity onPress={toggleMenu}>
-                <Ionicons
-                  name="menu"
-                  size={30}
-                  color="#000"
-                  style={{ marginRight: 10 }}
-                />
-              </TouchableOpacity>
-            ),
           }}
         />
         <Tabs.Screen
@@ -196,6 +125,33 @@ export default function UserLayout() {
           }}
         />
         <Tabs.Screen
+          name="scan"
+          options={{
+            tabBarLabel: () => null,
+            tabBarIcon: ({ focused }) => (
+              <View
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: focused ? "#F8B919" : "#d1d5db",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginBottom: 30,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 6,
+                  elevation: 6,
+                }}
+              >
+                <Ionicons name="scan" size={28} color="#fff" />
+              </View>
+            ),
+            headerTitle: "Scan Book",
+          }}
+        />
+        <Tabs.Screen
           name="browse"
           options={{
             tabBarLabel: "Library",
@@ -228,50 +184,6 @@ export default function UserLayout() {
           }}
         />
       </Tabs>
-
-      {menuVisible && (
-        <Animated.View
-          style={[
-            styles.bottomSheet,
-            { transform: [{ translateY: slideAnim }] },
-          ]}
-        >
-          <Pressable
-            style={[
-              styles.menuItem,
-              pressed === "view" && styles.pressedMenuItem,
-            ]}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            onPress={() => handlePress("view")}
-          >
-            <Ionicons
-              name={showPending ? "hourglass" : "eye"}
-              size={20}
-              color="#3b82f6"
-            />
-            <Text style={styles.menuText}>
-              {showPending ? "My Recently Viewed" : "My Pending"}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={[
-              styles.menuItem,
-              pressed === "favorite" && styles.pressedMenuItem,
-            ]}
-            onPress={() => handlePress("favorite")}
-          >
-            <Ionicons name="heart" size={20} color="#3b82f6" />
-            <Text style={styles.menuText}>My Favorite</Text>
-          </Pressable>
-
-          <Pressable style={styles.menuItem} onPress={toggleMenu}>
-            <Ionicons name="close" size={20} color="#f87171" />
-            <Text style={[styles.menuText, { color: "#f87171" }]}>Close</Text>
-          </Pressable>
-        </Animated.View>
-      )}
     </>
   );
 }

@@ -181,6 +181,14 @@ export default function LibraryUserLogin() {
             </View>
           </View>
 
+          <View style={{ width: "100%" }}>
+            <TouchableOpacity
+              onPress={() => router.push("library-user/forgot")}
+            >
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity
             onPress={handleLogin}
             disabled={isLoading}
@@ -208,7 +216,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 10,
-    marginTop: 10,
   },
   innerContainer: {
     flex: 1,
@@ -217,7 +224,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   logoText: {
     width: width * 0.45,
@@ -230,7 +237,6 @@ const styles = StyleSheet.create({
   logoOfficial: {
     width: width * 0.6,
     height: width * 0.4,
-    marginBottom: 10,
   },
   formContainer: {
     width: "100%",
@@ -291,5 +297,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
     fontSize: 16,
+  },
+  forgotPasswordText: {
+    color: "#3b82f6",
+    textAlign: "left",
+    width: "100%",
+    paddingLeft: 20,
+    marginTop: 8,
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

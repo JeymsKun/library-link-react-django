@@ -26,58 +26,21 @@ export function AuthProvider({ children }) {
     loadSession();
   }, []);
 
-  const refreshToken = async () => {
-    try {
-      const refresh = await SecureStore.getItemAsync("refresh");
-      if (!refresh) throw new Error("No refresh token found");
-
-      const response = await axios.post(`${API_BASE_URL}/token/refresh/`, {
-        refresh,
-      });
-
-      const newAccess = response.data.access;
-      await SecureStore.setItemAsync("token", newAccess);
-      setToken(newAccess);
-
-      return newAccess;
-    } catch (error) {
-      console.error(
-        "Failed to refresh token:",
-        error.response?.data || error.message
-      );
-      logout(); // Optional: force logout on refresh failure
-      return null;
-    }
-  };
-
-  const authRequest = async (url, method = "get", data = null) => {
-    try {
-      const response = await axios({
-        method,
-        url,
-        data,
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return response;
-    } catch (err) {
-      if (err.response?.status === 401) {
-        // Try to refresh the token
-        const newToken = await refreshToken();
-        if (!newToken) throw err;
-
-        // Retry the request with new token
-        const retryResponse = await axios({
-          method,
-          url,
-          data,
-          headers: { Authorization: `Bearer ${newToken}` },
-        });
-        return retryResponse;
-      } else {
-        throw err;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (token) {
+        axios
+          .post(
+            `${API_BASE_URL}/update-last-seen/`,
+            { device_type: "mobile" },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+          .catch((err) => console.log("Last seen update error", err));
       }
-    }
-  };
+    }, 300000);
+
+    return () => clearInterval(interval);
+  }, [token]);
 
   const loginUser = async ({ email, password }) => {
     try {
@@ -94,7 +57,21 @@ export function AuthProvider({ children }) {
         headers: { Authorization: `Bearer ${access}` },
       });
 
-      // If your backend no longer includes roles or you don’t want to check, you can remove role check here
+      await axios
+        .post(
+          `${API_BASE_URL}/update-last-seen/`,
+          { device_type: "mobile" },
+          {
+            headers: { Authorization: `Bearer ${access}` },
+          }
+        )
+        .then((res) => console.log("Last seen updated:", res.data))
+        .catch((err) =>
+          console.log(
+            "Last seen update error",
+            err.response?.data || err.message
+          )
+        );
 
       await SecureStore.setItemAsync("token", access);
       await SecureStore.setItemAsync("refresh", refresh);
@@ -112,17 +89,16 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // LOGOUT clears stored tokens and resets state
   const logout = async () => {
     await SecureStore.deleteItemAsync("token");
     await SecureStore.deleteItemAsync("refresh");
     await SecureStore.deleteItemAsync("user");
     setIsAuthenticated(false);
     setUserData(null);
+    setToken(null);
     setUserId(null);
   };
 
-  // SIGNUP example - post to /signup/
   const signup = async ({ email, password, idNumber, fullName }) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/signup/user/`, {
@@ -156,15 +132,12 @@ export function AuthProvider({ children }) {
         loginUser,
         logout,
         signup,
-        authRequest,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 }
-
-// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3NzA1OTU0LCJpYXQiOjE3NDc3MDIzNTQsImp0aSI6ImFhOTBhYjY4MDllNzQyMTJiYjg2MTZmMzE3NjY0YmQ5IiwidXNlcl9pZCI6MjB9.2Z3RZSCZ2BJFojNcUz0F_qRIRNWF0AnFgEV5gufoO5Y
 
 export function useAuth() {
   const context = useContext(AuthContext);

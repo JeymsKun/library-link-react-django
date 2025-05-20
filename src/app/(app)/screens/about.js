@@ -1,4 +1,3 @@
-// src/app/(app)/screens/about.js
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -15,10 +14,12 @@ import { useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import { API_BASE_URL } from "@env";
 import { useBooking } from "../../../context/BookingContext";
+import { useAuth } from "../../../context/AuthContext";
 
 const { width } = Dimensions.get("window");
 
 export default function AboutBook() {
+  const { userId, token } = useAuth();
   const { id } = useLocalSearchParams();
   const { addBooking } = useBooking();
   const [book, setBook] = useState(null);
@@ -26,11 +27,18 @@ export default function AboutBook() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !token || !userId) return;
 
     const fetchBook = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/books/${id}/`);
+        const response = await axios.get(
+          `${API_BASE_URL}/user/${userId}/books/${id}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setBook(response.data);
       } catch (error) {
         console.error("Error fetching book:", error);
@@ -40,14 +48,11 @@ export default function AboutBook() {
     };
 
     fetchBook();
-  }, [id]);
+  }, [id, token, userId]);
 
-  // Assuming your API returns full URLs for images, otherwise adjust accordingly
-  const images = book
-    ? [book.cover_image_url, ...(book.image_urls || [])].filter(Boolean)
-    : [];
+  const images = book ? book.images : [];
 
-  const barcodeImageUrl = book ? book.barcode_url : null;
+  const barcodeImageUrl = book ? book.barcode_image : null;
 
   if (loading) {
     return (
@@ -147,7 +152,7 @@ export default function AboutBook() {
           style={styles.bookingButton}
           onPress={() => addBooking(book)}
         >
-          <Text style={styles.bookingButtonText}>Add to Booking Cart</Text>
+          <Text style={styles.bookingButtonText}>Add to Book Cart</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
