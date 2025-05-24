@@ -15,6 +15,7 @@ import axios from "axios";
 import { API_BASE_URL } from "@env";
 import { useBooking } from "../../../context/BookingContext";
 import { useAuth } from "../../../context/AuthContext";
+console.log("API_BASE_URL for books", API_BASE_URL);
 
 const { width } = Dimensions.get("window");
 

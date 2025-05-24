@@ -4,6 +4,7 @@ import * as SecureStore from "expo-secure-store";
 import { Alert } from "react-native";
 import { router } from "expo-router";
 import { API_BASE_URL } from "@env";
+console.log("API_BASE_URL for axios instance", API_BASE_URL);
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
