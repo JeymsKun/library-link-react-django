@@ -4,12 +4,15 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Image,
-  StatusBar,
+  Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+
+const { width, height } = Dimensions.get('window');
 
 export default function LoginOptionsPage() {
   const router = useRouter();
@@ -23,40 +26,41 @@ export default function LoginOptionsPage() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <StatusBar style="dark" />
+      <View style={styles.contentContainer}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("../../assets/library-text.png")}
+            style={styles.logoText}
+            resizeMode="contain"
+          />
+          <Image
+            source={require("../../assets/library-logo.png")}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+        </View>
 
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../../assets/library-text.png")}
-          style={styles.logoText}
-          resizeMode="contain"
-        />
-        <Image
-          source={require("../../assets/library-logo.png")}
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
-      </View>
+        <View style={styles.optionsContainer}>
+          <Text style={styles.loginAsText}>LOGIN</Text>
 
-      <View style={styles.optionsContainer}>
-        <Text style={styles.loginAsText}>LOGIN</Text>
+          <TouchableOpacity
+            style={styles.optionButtonUser}
+            onPress={navigateToUserLogin}
+          >
+            <Ionicons name="person-circle" size={26} color="#fff" />
+            <Text style={styles.optionButtonText}>Library User</Text>
+            <Ionicons name="chevron-forward" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
-          style={styles.optionButtonUser}
-          onPress={navigateToUserLogin}
-        >
-          <Ionicons name="person-circle" size={26} color="#fff" />
-          <Text style={styles.optionButtonText}>Library User</Text>
-          <Ionicons name="chevron-forward" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.signupContainer}>
-        <Text style={styles.signupText}>No account?</Text>
-        <TouchableOpacity onPress={navigateToSignup}>
-          <Text style={styles.signupLinkText}>Sign up here</Text>
-        </TouchableOpacity>
+        <View style={styles.signupContainer}>
+          <Text style={styles.signupText}>No account?</Text>
+          <TouchableOpacity onPress={navigateToSignup}>
+            <Text style={styles.signupLinkText}>Sign up here</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -65,35 +69,40 @@ export default function LoginOptionsPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
     backgroundColor: "white",
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: width * 0.06, 
+    paddingVertical: height * 0.02, 
   },
   logoContainer: {
     alignItems: "center",
-    marginVertical: 40,
+    marginBottom: height * 0.04,
   },
   logoText: {
-    width: 170,
-    height: 60,
-    marginBottom: 10,
+    width: width * 0.4, 
+    height: height * 0.06, 
+    marginBottom: height * 0.02, 
   },
   logoImage: {
-    width: 150,
-    height: 150,
+    width: width * 0.35, 
+    height: width * 0.35, 
   },
   optionsContainer: {
-    paddingHorizontal: 24,
-    marginTop: 20,
+    width: "100%",
+    marginVertical: height * 0.03, 
   },
   optionButtonUser: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#2DADFD",
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingVertical: height * 0.02, 
+    paddingHorizontal: width * 0.05, 
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: height * 0.02, 
     borderWidth: 1,
     borderColor: "#2DADFD",
     shadowColor: "#000",
@@ -104,32 +113,32 @@ const styles = StyleSheet.create({
   },
   optionButtonText: {
     flex: 1,
-    fontSize: 18,
+    fontSize: Math.min(width, height) * 0.045, 
     fontWeight: "600",
     color: "#fff",
-    marginLeft: 16,
+    marginLeft: width * 0.04, 
   },
   signupContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
+    marginTop: height * 0.03,
   },
   signupText: {
-    fontSize: 16,
+    fontSize: Math.min(width, height) * 0.04, 
     color: "#666",
   },
   signupLinkText: {
-    fontSize: 16,
+    fontSize: Math.min(width, height) * 0.04, 
     fontWeight: "600",
     color: "#3b82f6",
-    marginLeft: 5,
+    marginLeft: width * 0.01, 
   },
   loginAsText: {
-    fontSize: 20,
+    fontSize: Math.min(width, height) * 0.05, 
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: height * 0.025, 
     color: "#333",
   },
 });

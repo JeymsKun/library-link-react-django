@@ -2,17 +2,22 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Image,
   Text,
   RefreshControl,
+  Dimensions,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../../../context/AuthContext";
 import axiosInstance from "../../../api/axiosInstance";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import BookCard from "../../../components/BookCard";
+
+const { width, height } = Dimensions.get('window');
 
 export default function UserDashboard() {
   const router = useRouter();
@@ -87,56 +92,46 @@ export default function UserDashboard() {
       ? pendingBooks
       : recentBooks;
 
+  const allViews = ["recent", "pending", "favorite"];
   const titles = {
     recent: "Recently Viewed",
     pending: "My Pending",
-    favorite: "My Favorite Books",
-  };
-
-  const toggleOptions = {
-    recent: ["pending", "favorite"],
-    pending: ["recent", "favorite"],
-    favorite: ["recent", "pending"],
+    favorite: "My Favorite",
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="light" />
+      <View style={styles.toggleContainer}>
+        {allViews.map((view) => (
+          <TouchableOpacity
+            key={view}
+            style={[
+              styles.toggleButton,
+              currentView === view && styles.toggleButtonActive,
+            ]}
+            onPress={() => setCurrentView(view)}
+          >
+            <Text
+              style={[
+                styles.toggleButtonText,
+                currentView === view && styles.toggleButtonTextActive,
+              ]}
+              numberOfLines={1}
+            >
+              {titles[view]}
+            </Text>
+            {currentView === view && <View style={styles.activeIndicator} />}
+          </TouchableOpacity>
+        ))}
+      </View>
       <ScrollView
         contentContainerStyle={styles.scrollView}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Toggle Buttons */}
-        <View style={styles.toggleRow}>
-          {toggleOptions[currentView].map((option) => (
-            <TouchableOpacity
-              key={option}
-              style={[
-                styles.toggleButton,
-                currentView === option && styles.toggleButtonActive,
-              ]}
-              onPress={() => setCurrentView(option)}
-            >
-              <Text
-                style={[
-                  styles.toggleButtonText,
-                  currentView === option && styles.toggleButtonTextActive,
-                ]}
-              >
-                {titles[option]}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Title Below Buttons */}
-        <View style={styles.titleRow}>
-          <Text style={styles.sectionTitle}>{titles[currentView]}</Text>
-        </View>
-
-        {/* Books Grid */}
-        <View style={styles.bookGrid}>
+        <View style={styles.contentContainer}>
           {currentBooks.length === 0 ? (
             <View style={styles.emptyMessageContainer}>
               <Text style={styles.emptyMessageText}>
@@ -148,27 +143,16 @@ export default function UserDashboard() {
               </Text>
             </View>
           ) : (
-            currentBooks.map((book) => (
-              <TouchableOpacity
-                key={book.id || book.books_id}
-                style={styles.bookContainer}
-                onPress={() => handleBookPress(book.id || book.books_id)}
-              >
-                <Image
-                  source={{
-                    uri: book.cover_image || book.coverUrl || book.cover_url,
-                  }}
-                  style={styles.coverImage}
-                  resizeMode="cover"
+            <View style={styles.bookGrid}>
+              {currentBooks.map((book) => (
+                <BookCard
+                  key={book.id || book.books_id}
+                  book={book}
+                  onPress={() => handleBookPress(book.id || book.books_id)}
+                  style={styles.bookCard}
                 />
-                <Text style={styles.bookTitle} numberOfLines={2}>
-                  {book.title}
-                </Text>
-                <Text style={styles.bookAuthor} numberOfLines={1}>
-                  {book.author}
-                </Text>
-              </TouchableOpacity>
-            ))
+              ))}
+            </View>
           )}
         </View>
       </ScrollView>
@@ -180,104 +164,76 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#A9DEFF",
-    paddingBottom: 50,
   },
-  scrollView: {
-    padding: 10,
-  },
-
-  toggleRow: {
+  toggleContainer: {
     flexDirection: "row",
-    justifyContent: "center",
-    marginVertical: 15,
+    backgroundColor: '#ffffff',
+    paddingTop: Platform.OS === 'ios' ? height * 0.005 : height * 0.01,
+    paddingBottom: height * 0.01,
+    paddingHorizontal: width * 0.02,
+    justifyContent: 'space-evenly',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e5e5',
   },
   toggleButton: {
-    backgroundColor: "#4A90E2",
-    paddingVertical: 10,
-    width: 140,
-    marginHorizontal: 12,
-    borderRadius: 25,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    elevation: 5,
-    opacity: 0.8,
+    flex: 1,
+    paddingVertical: height * 0.012,
+    marginHorizontal: width * 0.005,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
+    position: 'relative',
+    minWidth: width * 0.25,
   },
   toggleButtonActive: {
-    backgroundColor: "#357ABD",
-    opacity: 1,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
   toggleButtonText: {
-    color: "white",
+    color: "#666",
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: Math.min(width, height) * 0.028,
     textAlign: "center",
+    paddingHorizontal: 4,
   },
   toggleButtonTextActive: {
+    color: "#3b82f6",
     fontWeight: "700",
-    fontSize: 15,
   },
-
-  titleRow: {
-    marginBottom: 15,
-    alignItems: "center",
+  activeIndicator: {
+    position: 'absolute',
+    bottom: -height * 0.01,
+    left: width * 0.05,
+    right: width * 0.05,
+    height: 3,
+    backgroundColor: '#3b82f6',
+    borderRadius: 1.5,
   },
-  sectionTitle: {
-    fontSize: 22,
-    color: "#222",
-    fontWeight: "bold",
+  scrollView: {
+    flexGrow: 1,
   },
-
+  contentContainer: {
+    flex: 1,
+    paddingHorizontal: width * 0.04,
+    paddingTop: height * 0.02,
+    paddingBottom: Platform.OS === 'ios' ? height * 0.08 : height * 0.1,
+  },
   bookGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginHorizontal: 20,
+    gap: width * 0.04,
   },
-  bookContainer: {
-    width: "45%",
-    aspectRatio: 0.65,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    overflow: "hidden",
+  bookCard: {
+    width: width * 0.44,
   },
-  coverImage: {
-    width: "100%",
-    height: "70%",
-  },
-  bookTitle: {
-    fontSize: 14,
-    padding: 6,
-    fontWeight: "600",
-    textAlign: "center",
-    color: "#333",
-  },
-  bookAuthor: {
-    fontSize: 12,
-    paddingHorizontal: 8,
-    color: "#555",
-    textAlign: "center",
-    fontStyle: "italic",
-  },
-
   emptyMessageContainer: {
-    width: "100%",
-    height: 200,
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingVertical: height * 0.1,
   },
   emptyMessageText: {
-    fontSize: 16,
+    fontSize: Math.min(width, height) * 0.04,
     color: "#666",
     textAlign: "center",
     fontStyle: "italic",

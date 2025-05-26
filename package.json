@@ -9,38 +9,63 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@reduxjs/toolkit": "^2.8.2",
-    "@tanstack/react-query": "^5.76.1",
+    "@react-native-community/datetimepicker": "8.3.0",
+    "@react-native-picker/picker": "^2.11.0",
+    "@react-navigation/drawer": "^7.3.9",
+    "@react-navigation/native": "^7.0.14",
+    "@react-navigation/native-stack": "^7.2.0",
+    "@reduxjs/toolkit": "^2.7.0",
+    "@supabase/supabase-js": "^2.49.4",
+    "@tanstack/react-query": "^5.74.4",
     "axios": "^1.9.0",
-    "eas-cli": "^16.6.2",
-    "expo": "~53.0.9",
+    "base64-arraybuffer": "^1.0.2",
+    "expo": "^53.0.8",
     "expo-camera": "~16.1.6",
+    "expo-clipboard": "~7.1.4",
     "expo-constants": "~17.1.6",
-    "expo-linking": "~7.1.5",
-    "expo-router": "~5.0.7",
+    "expo-dev-client": "~5.1.8",
+    "expo-file-system": "~18.1.9",
+    "expo-image-picker": "~16.1.4",
+    "expo-linear-gradient": "~14.1.4",
+    "expo-linking": "~7.1.4",
+    "expo-media-library": "~17.1.6",
+    "expo-router": "~5.0.6",
     "expo-secure-store": "~14.2.3",
+    "expo-sharing": "~13.1.5",
     "expo-status-bar": "~2.2.3",
+    "moti": "^0.30.0",
     "react": "19.0.0",
-    "react-dom": "19.0.0",
     "react-native": "0.79.2",
-    "react-native-dotenv": "^3.4.11",
-    "react-native-paper": "^5.14.4",
+    "react-native-chart-kit": "^6.12.0",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-get-random-values": "^1.11.0",
+    "react-native-paper": "^5.13.3",
     "react-native-picker-select": "^9.3.1",
-    "react-native-reanimated": "^3.17.5",
+    "react-native-reanimated": "~3.17.4",
     "react-native-reanimated-carousel": "^4.0.2",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
-    "react-native-web": "^0.20.0",
-    "react-redux": "^9.2.0"
+    "react-native-svg": "15.11.2",
+    "react-native-vector-icons": "^10.2.0",
+    "react-redux": "^9.2.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "@react-native-community/cli": "^18.0.0",
+    "react-native-dotenv": "^3.4.11"
   },
   "private": true,
   "expo": {
     "doctor": {
       "reactNativeDirectoryCheck": {
-        "exclude": [],
+        "exclude": [
+          "react-native-chart-kit",
+          "react-native-vector-icons",
+          "base64-arraybuffer",
+          "react-native-vector-icons",
+          "uuid"
+        ],
         "listUnknownPackages": false
       }
     }

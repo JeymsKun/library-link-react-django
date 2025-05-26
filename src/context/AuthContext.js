@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { API_BASE_URL } from "@env";
@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
 
   const loginUser = async ({ email, password }) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/token/`, {
+      const response = await axios.post(`${API_BASE_URL}/token/mobile/`, {
         email,
         password,
       });
@@ -85,8 +85,11 @@ export function AuthProvider({ children }) {
 
       return { success: true };
     } catch (error) {
-      console.error("LoginUser error:", error.response?.data || error.message);
-      return { success: false, error: "Invalid credentials or server error." };
+      console.log("LoginUser error:", error.response?.data || error.message);
+      return {
+        success: false,
+        error: "Invalid email or password.",
+      };
     }
   };
 
@@ -100,26 +103,34 @@ export function AuthProvider({ children }) {
     setUserId(null);
   };
 
-  const signup = async ({ email, password, idNumber, fullName }) => {
+  const signup = async ({ fullName, email, password, idNumber }) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/signup/user/`, {
-        email,
-        password,
-        id_number: idNumber,
-        full_name: fullName,
+      const response = await fetch(`${API_BASE_URL}/signup/user/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          full_name: fullName,
+          email,
+          password,
+          id_number: idNumber,
+        }),
       });
 
-      if (response.status === 201) {
+      if (response.ok) {
         return { success: true };
       } else {
-        return { success: false, error: "Signup failed." };
+        const errorData = await response.json();
+        console.log("Signup failed:", errorData);
+        return {
+          success: false,
+          error: errorData?.detail || "Signup failed",
+        };
       }
     } catch (error) {
-      console.error("Signup error:", error.response?.data || error.message);
-      return {
-        success: false,
-        error: "Unexpected error occurred during signup.",
-      };
+      console.error("Signup error:", error);
+      return { success: false, error: "Network or server error" };
     }
   };
 

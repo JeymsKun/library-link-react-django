@@ -76,7 +76,13 @@ export default function LibraryUserSignup() {
         fullName,
       });
 
-      if (!result.success) {
+      if (result.success) {
+        Alert.alert("Success", "OTP sent! Please verify your email.");
+        router.push({
+          pathname: "/library-user/verify",
+          params: { email, mode: "signup" },
+        });
+      } else if (!result.success) {
         Alert.alert("Signup Failed", result.error || "Please try again.");
       } else {
         Alert.alert("Success", "Account created!");
@@ -282,8 +288,11 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   backButton: {
-    padding: 10,
-    marginTop: 10,
+    position: "absolute",
+    top: Platform.OS === "ios" ? 20 : 10,
+    left: 16,
+    zIndex: 1,
+    padding: 8,
   },
   innerContainer: {
     flex: 1,
@@ -292,7 +301,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: 20,
+    paddingTop: 20,
   },
   logoText: {
     width: 170,

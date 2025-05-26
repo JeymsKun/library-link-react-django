@@ -49,7 +49,7 @@ export default function MoreSettings() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#A9DEFF",
+    backgroundColor: " #A9DEFF",
     padding: width * 0.05,
   },
   option: {

@@ -15,11 +15,13 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { API_BASE_URL } from "@env";
 
 const { width } = Dimensions.get("window");
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -32,21 +34,20 @@ export default function ForgotPassword() {
     setIsSubmitting(true);
 
     try {
-      // Replace this with your actual API call
-      const response = await fetch(
-        "https://your-api.com/api/libraryuser/request-password-reset/",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/user/forgot-password/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
       const data = await response.json();
 
       if (response.ok) {
         Alert.alert("Success", "An OTP has been sent to your email.");
-        router.push("/verify-otp");
+        router.push({
+          pathname: "/library-user/verify",
+          params: { email, mode: "reset" },
+        });
       } else {
         Alert.alert("Error", data.error || "Failed to send OTP.");
       }
@@ -99,13 +100,22 @@ export default function ForgotPassword() {
               keyboardType="email-address"
               autoCapitalize="none"
               textContentType="emailAddress"
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
             />
-            <Text style={styles.floatingLabel}>Email Address</Text>
+            <Text
+              style={[
+                styles.floatingLabel,
+                (isFocused || email !== "") && styles.floatingLabelFocused,
+              ]}
+            >
+              Email Address
+            </Text>
           </View>
 
           <TouchableOpacity
             onPress={handleSubmit}
-            style={styles.submitButton}
+            style={[styles.submitButton, isSubmitting && styles.disabledButton]}
             disabled={isSubmitting}
           >
             <Text style={styles.submitText}>
@@ -125,7 +135,11 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   backButton: {
-    padding: 16,
+    position: "absolute",
+    top: Platform.OS === "ios" ? 20 : 10,
+    left: 16,
+    zIndex: 1,
+    padding: 8,
   },
   innerContainer: {
     flex: 1,
@@ -168,22 +182,30 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: 16,
-    paddingVertical: 8,
+    paddingVertical: 14,
     color: "#000",
   },
   floatingLabel: {
     position: "absolute",
     left: 0,
-    top: 8,
+    top: 18,
     color: "#777",
     fontSize: 16,
-    zIndex: -1,
+    zIndex: 1,
+  },
+  floatingLabelFocused: {
+    top: -10,
+    fontSize: 12,
+    color: "#3b82f6",
   },
   submitButton: {
     backgroundColor: "#3b82f6",
     paddingVertical: 14,
     borderRadius: 30,
     alignItems: "center",
+  },
+  disabledButton: {
+    backgroundColor: "#a5c1f9",
   },
   submitText: {
     color: "#fff",

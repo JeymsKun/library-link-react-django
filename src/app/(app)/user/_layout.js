@@ -1,10 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { View, Image, Text, StyleSheet } from "react-native";
+import { View, Image, StyleSheet, Platform, Keyboard } from "react-native";
+import {
+  Appbar,
+  useTheme,
+  Text,
+  Surface,
+  IconButton,
+} from "react-native-paper";
 
 export default function UserLayout() {
   const [time, setTime] = useState("");
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const theme = useTheme();
+
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => setKeyboardVisible(true)
+    );
+    const keyboardWillHideListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => setKeyboardVisible(false)
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const updateTime = () => {
@@ -25,31 +49,26 @@ export default function UserLayout() {
   }, []);
 
   return (
-    <>
+    <View style={styles.container}>
       <Tabs
         screenOptions={({ route }) => ({
-          tabBarIcon: ({ color, size }) => {
+          tabBarIcon: ({ color, size, focused }) => {
             let iconName;
-
             if (route.name === "index") {
-              iconName = "library";
-            } else if (route.name === "booking") {
-              iconName = "calendar";
+              iconName = "bookshelf";
+            } else if (route.name === "history") {
+              iconName = "history";
             } else if (route.name === "browse") {
-              iconName = "search";
+              iconName = "library-shelves";
             } else if (route.name === "more") {
-              iconName = "ellipsis-horizontal-circle";
+              iconName = "dots-horizontal-circle";
             }
 
-            return <Ionicons name={iconName} size={20} color={color} />;
+            return <IconButton icon={iconName} size={20} iconColor={color} />;
           },
-          tabBarActiveTintColor: "#3b82f6",
+          tabBarActiveTintColor: theme.colors.primary,
           tabBarInactiveTintColor: "gray",
           tabBarStyle: {
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
             backgroundColor: "#ffffff",
             borderTopWidth: 0,
             elevation: 0,
@@ -58,68 +77,47 @@ export default function UserLayout() {
             shadowOpacity: 0.1,
             shadowRadius: 6,
             height: 60,
+            paddingBottom: Platform.OS === "ios" ? 20 : 10,
+            display: isKeyboardVisible ? "none" : "flex",
           },
           tabBarLabelStyle: {
             fontSize: 12,
             fontWeight: "600",
+            paddingBottom: Platform.OS === "ios" ? 0 : 10,
           },
-          headerStyle: {
-            backgroundColor: "#ffffff",
-          },
-          headerTintColor: "#000",
-          headerTitleStyle: {
-            fontWeight: "bold",
+          headerShown: route.name === "index" || route.name === "more",
+          header: ({ route, options }) => {
+            if (route.name !== "index" && route.name !== "more") return null;
+            return (
+              <Appbar.Header style={styles.appHeader} elevated>
+                <Image
+                  source={require("../../../assets/library-official-logo.png")}
+                  style={styles.headerLogo}
+                  resizeMode="contain"
+                />
+              </Appbar.Header>
+            );
           },
         })}
       >
         <Tabs.Screen
           name="index"
           options={{
-            tabBarLabel: () => (
-              <Text style={{ fontSize: 11, fontWeight: "600" }}>
+            tabBarLabel: ({ focused, color }) => (
+              <Text variant="labelSmall" style={[styles.tabLabel, { color }]}>
                 My Bookshelf
               </Text>
-            ),
-            headerTitle: () => (
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Image
-                  source={require("../../../assets/library-official-logo.png")}
-                  style={{ width: 120, height: 30, marginRight: 10 }}
-                  resizeMode="contain"
-                />
-              </View>
             ),
           }}
         />
         <Tabs.Screen
-          name="booking"
+          name="history"
           options={{
-            tabBarLabel: () => (
+            tabBarLabel: ({ focused, color }) => (
               <View style={{ alignItems: "center" }}>
-                <Text style={{ fontSize: 10, fontWeight: "600" }}>Booking</Text>
-                <Text style={{ fontSize: 10, fontWeight: "600" }}>Summary</Text>
-              </View>
-            ),
-            headerTitle: () => (
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Image
-                  source={require("../../../assets/library-logo.png")}
-                  style={{ width: 30, height: 30, marginRight: 10 }}
-                  resizeMode="contain"
-                />
-                <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                  Booking
+                <Text variant="labelSmall" style={[styles.tabLabel, { color }]}>
+                  History
                 </Text>
-              </View>
-            ),
-            headerRight: () => (
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text style={{ fontSize: 14, marginRight: 10 }}>{time}</Text>
-                <Image
-                  source={require("../../../assets/calendar-icon.png")}
-                  style={{ width: 28, height: 28, marginRight: 10 }}
-                  resizeMode="contain"
-                />
               </View>
             ),
           }}
@@ -129,96 +127,79 @@ export default function UserLayout() {
           options={{
             tabBarLabel: () => null,
             tabBarIcon: ({ focused }) => (
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 30,
-                  backgroundColor: focused ? "#F8B919" : "#d1d5db",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 30,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 6,
-                  elevation: 6,
-                }}
+              <Surface
+                style={[styles.scanButton, focused && styles.scanButtonFocused]}
+                elevation={6}
               >
-                <Ionicons name="scan" size={28} color="#fff" />
-              </View>
+                <IconButton icon="barcode-scan" size={28} iconColor="#fff" />
+              </Surface>
             ),
-            headerTitle: "Scan Book",
           }}
         />
         <Tabs.Screen
           name="browse"
           options={{
-            tabBarLabel: "Library",
-            headerTitle: () => (
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Image
-                  source={require("../../../assets/library-logo.png")}
-                  style={{ width: 30, height: 30, marginRight: 10 }}
-                  resizeMode="contain"
-                />
-                <Text style={{ fontSize: 18, fontWeight: "bold" }}>Browse</Text>
-              </View>
+            tabBarLabel: ({ focused, color }) => (
+              <Text variant="labelSmall" style={[styles.tabLabel, { color }]}>
+                Library
+              </Text>
             ),
           }}
         />
         <Tabs.Screen
           name="more"
           options={{
-            tabBarLabel: "More",
-            headerTitle: () => (
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Image
-                  source={require("../../../assets/library-logo.png")}
-                  style={{ width: 30, height: 30, marginRight: 10 }}
-                  resizeMode="contain"
-                />
-                <Text style={{ fontSize: 18, fontWeight: "bold" }}>More</Text>
-              </View>
+            tabBarLabel: ({ focused, color }) => (
+              <Text variant="labelSmall" style={[styles.tabLabel, { color }]}>
+                More
+              </Text>
             ),
           }}
         />
       </Tabs>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  bottomSheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+  container: {
+    flex: 1,
+    backgroundColor: "#A9DEFF",
   },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+  appHeader: {
+    backgroundColor: "#ffffff",
+    elevation: 0,
   },
-  pressedMenuItem: {
-    backgroundColor: "#e5e7eb",
-    borderRadius: 8,
-  },
-  menuText: {
-    fontSize: 16,
-    fontWeight: "500",
+  headerLogo: {
+    width: 120,
+    height: 120,
     marginLeft: 10,
-    color: "#333",
+  },
+  headerTitleContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "flex-start",
+    paddingLeft: 10,
+  },
+  headerTitleText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#3b82f6",
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  scanButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#d1d5db",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 30,
+  },
+  scanButtonFocused: {
+    backgroundColor: "#F8B919",
   },
 });
