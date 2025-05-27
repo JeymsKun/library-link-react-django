@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  StatusBar,
-  Alert,
   Platform,
   KeyboardAvoidingView,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,11 +18,22 @@ import { API_BASE_URL } from "@env";
 export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [passwordsMatch, setPasswordsMatch] = useState(true);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isFocusedNew, setIsFocusedNew] = useState(false);
   const [isFocusedConfirm, setIsFocusedConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { email, otp } = useLocalSearchParams();
+
+  useEffect(() => {
+    if (confirmPassword === "") {
+      setPasswordsMatch(true);
+    } else {
+      setPasswordsMatch(newPassword === confirmPassword);
+    }
+  }, [newPassword, confirmPassword]);
 
   const handleSubmit = async () => {
     if (!newPassword || !confirmPassword) {
@@ -83,9 +93,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.keyboardView}
@@ -104,14 +112,16 @@ export default function ResetPassword() {
               Enter your new password below to reset your account password.
             </Text>
 
-            <View style={styles.formGroup}>
+            <View
+              style={[styles.formGroup, !passwordsMatch && styles.errorBorder]}
+            >
               <TextInput
                 style={styles.input}
                 placeholder=" "
                 placeholderTextColor="transparent"
                 value={newPassword}
                 onChangeText={setNewPassword}
-                secureTextEntry
+                secureTextEntry={!showNewPassword}
                 onFocus={() => setIsFocusedNew(true)}
                 onBlur={() => setIsFocusedNew(false)}
                 textContentType="newPassword"
@@ -122,20 +132,34 @@ export default function ResetPassword() {
                   styles.floatingLabel,
                   (isFocusedNew || newPassword !== "") &&
                     styles.floatingLabelFocused,
+                  !passwordsMatch && styles.errorLabel,
                 ]}
               >
                 New Password
               </Text>
+              <TouchableOpacity
+                onPress={() => setShowNewPassword(!showNewPassword)}
+                style={styles.eyeIcon}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={showNewPassword ? "eye-off-outline" : "eye-outline"}
+                  size={24}
+                  color="#777"
+                />
+              </TouchableOpacity>
             </View>
 
-            <View style={styles.formGroup}>
+            <View
+              style={[styles.formGroup, !passwordsMatch && styles.errorBorder]}
+            >
               <TextInput
                 style={styles.input}
                 placeholder=" "
                 placeholderTextColor="transparent"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                secureTextEntry
+                secureTextEntry={!showConfirmPassword}
                 onFocus={() => setIsFocusedConfirm(true)}
                 onBlur={() => setIsFocusedConfirm(false)}
                 textContentType="password"
@@ -146,10 +170,22 @@ export default function ResetPassword() {
                   styles.floatingLabel,
                   (isFocusedConfirm || confirmPassword !== "") &&
                     styles.floatingLabelFocused,
+                  !passwordsMatch && styles.errorLabel,
                 ]}
               >
                 Confirm Password
               </Text>
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={styles.eyeIcon}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                  size={24}
+                  color="#777"
+                />
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
@@ -174,7 +210,7 @@ export default function ResetPassword() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "white",
   },
   keyboardView: {
     flex: 1,
@@ -183,13 +219,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight + 10 : 20,
   },
   backButton: {
     position: "absolute",
-    top: 10,
-    left: 0,
-    padding: 8,
+    top: Platform.OS === "ios" ? 60 : 40,
+    left: 30,
     zIndex: 10,
   },
   card: {
@@ -223,6 +257,7 @@ const styles = StyleSheet.create({
   input: {
     fontSize: 16,
     paddingVertical: 14,
+    paddingRight: 40, // space for eye icon
     color: "#000",
   },
   floatingLabel: {
@@ -238,6 +273,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#3b82f6",
   },
+  eyeIcon: {
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    top: 5,
+    padding: 8,
+    zIndex: 2,
+  },
   submitButton: {
     backgroundColor: "#3b82f6",
     paddingVertical: 14,
@@ -251,5 +294,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 16,
+  },
+  errorBorder: {
+    borderBottomColor: "red",
+  },
+  errorLabel: {
+    color: "red",
   },
 });

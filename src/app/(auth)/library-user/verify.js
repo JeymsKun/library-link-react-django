@@ -78,9 +78,7 @@ export default function VerifyOtp() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.keyboardView}
@@ -141,7 +139,7 @@ export default function VerifyOtp() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "white",
   },
   keyboardView: {
     flex: 1,
@@ -150,14 +148,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   backButton: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 20 : StatusBar.currentHeight || 10,
-    left: 16,
+    top: Platform.OS === "ios" ? 60 : 40,
+    left: 30,
     zIndex: 10,
-    padding: 8,
   },
   card: {
     backgroundColor: "#fff",
@@ -191,8 +187,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 14,
     color: "#000",
-    letterSpacing: 12, // for nicer OTP input spacing
-    textAlign: "center",
+    letterSpacing: 12,
+    textAlign: "left",
   },
   floatingLabel: {
     position: "absolute",

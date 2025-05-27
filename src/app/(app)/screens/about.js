@@ -16,17 +16,14 @@ import Carousel from "react-native-reanimated-carousel";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import axios from "axios";
 import { API_BASE_URL } from "@env";
-import { useBooking } from "../../../context/BookingContext";
 import { useAuth } from "../../../context/AuthContext";
 import { MaterialIcons } from "@expo/vector-icons";
-
 
 const { width } = Dimensions.get("window");
 
 export default function AboutBook() {
   const { userId, token } = useAuth();
   const { id } = useLocalSearchParams();
-  const { addBooking } = useBooking();
   const [book, setBook] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -67,18 +64,18 @@ export default function AboutBook() {
       const response = await axios.get(
         `${API_BASE_URL}/user/${userId}/booking-cart/`,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setIsInCart(response.data.some(item => item.book.id === id));
+      setIsInCart(response.data.some((item) => item.book.id === id));
     } catch (err) {
-      console.error('Error checking cart status:', err);
+      console.error("Error checking cart status:", err);
     }
   };
 
   const checkBookStatus = async () => {
     if (!id || !token || !userId) {
-      console.log('Missing required data:', { id, token, userId });
+      console.log("Missing required data:", { id, token, userId });
       return;
     }
 
@@ -86,47 +83,45 @@ export default function AboutBook() {
       const pendingResponse = await axios.get(
         `${API_BASE_URL}/user/${userId}/pending-books/`,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      // Log the response for debugging
-      console.log('Pending books response:', pendingResponse.data);
+      console.log("Pending books response:", pendingResponse.data);
 
       if (!Array.isArray(pendingResponse.data)) {
-        console.log('Invalid response format - expected array');
+        console.log("Invalid response format - expected array");
         setBookStatus(null);
         return;
       }
 
-      // Find the book with proper null checks
-      const pendingBook = pendingResponse.data.find(item => {
+      const pendingBook = pendingResponse.data.find((item) => {
         if (!item || !item.book) return false;
         const bookId = parseInt(item.book.id);
         const currentId = parseInt(id);
         return !isNaN(bookId) && !isNaN(currentId) && bookId === currentId;
       });
 
-      console.log('Found pending book:', pendingBook);
+      console.log("Found pending book:", pendingBook);
 
       if (pendingBook && pendingBook.status) {
         const status = pendingBook.status.toLowerCase();
-        if (['borrowed', 'reserved', 'pending'].includes(status)) {
+        if (["borrowed", "reserved", "pending"].includes(status)) {
           setBookStatus(status);
         } else {
-          console.log('Unknown status:', status);
+          console.log("Unknown status:", status);
           setBookStatus(null);
         }
       } else {
-        console.log('No matching book found in pending books');
+        console.log("No matching book found in pending books");
         setBookStatus(null);
       }
     } catch (err) {
-      console.error('Error checking book status:', err);
+      console.error("Error checking book status:", err);
       if (err.response) {
-        console.error('Error response:', {
+        console.error("Error response:", {
           status: err.response.status,
-          data: err.response.data
+          data: err.response.data,
         });
       }
       setBookStatus(null);
@@ -135,54 +130,56 @@ export default function AboutBook() {
 
   const checkAvailableCopies = async () => {
     if (!id || !token || !userId || !book) {
-      console.log('Missing required data for checking copies:', { id, token, userId, book });
+      console.log("Missing required data for checking copies:", {
+        id,
+        token,
+        userId,
+        book,
+      });
       return;
     }
 
     try {
-      // Get all pending books to count borrowed/reserved copies
       const pendingResponse = await axios.get(
         `${API_BASE_URL}/user/${userId}/pending-books/`,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      // Log response for debugging
-      console.log('Pending books response:', pendingResponse.data);
+      console.log("Pending books response:", pendingResponse.data);
 
       if (!Array.isArray(pendingResponse.data)) {
-        console.log('Invalid response format - expected array');
+        console.log("Invalid response format - expected array");
         setAvailableCopies(book.copies || 0);
         return;
       }
 
-      // Count how many copies are currently borrowed or reserved
-      const usedCopies = pendingResponse.data.filter(item => {
+      const usedCopies = pendingResponse.data.filter((item) => {
         if (!item || !item.book) return false;
         const bookId = parseInt(item.book.id);
         const currentId = parseInt(id);
-        return !isNaN(bookId) &&
+        return (
+          !isNaN(bookId) &&
           !isNaN(currentId) &&
           bookId === currentId &&
-          ['borrowed', 'reserved'].includes((item.status || '').toLowerCase());
+          ["borrowed", "reserved"].includes((item.status || "").toLowerCase())
+        );
       }).length;
 
-      console.log('Used copies:', usedCopies, 'Total copies:', book.copies);
+      console.log("Used copies:", usedCopies, "Total copies:", book.copies);
 
-      // Calculate available copies
       const totalCopies = parseInt(book.copies) || 0;
       const available = Math.max(0, totalCopies - usedCopies);
       setAvailableCopies(available);
     } catch (err) {
-      console.error('Error checking available copies:', err);
+      console.error("Error checking available copies:", err);
       if (err.response) {
-        console.error('Error response:', {
+        console.error("Error response:", {
           status: err.response.status,
-          data: err.response.data
+          data: err.response.data,
         });
       }
-      // If there's an error, show total copies as available
       setAvailableCopies(parseInt(book.copies) || 0);
     }
   };
@@ -194,10 +191,10 @@ export default function AboutBook() {
         fetchBook(),
         checkCartStatus(),
         checkBookStatus(),
-        checkAvailableCopies()
+        checkAvailableCopies(),
       ]);
     } catch (error) {
-      console.error('Error refreshing:', error);
+      console.error("Error refreshing:", error);
     } finally {
       setRefreshing(false);
     }
@@ -208,16 +205,15 @@ export default function AboutBook() {
 
     const loadData = async () => {
       try {
-        // First fetch the book
         await fetchBook();
-        // Then check status and copies
+
         await Promise.all([
           checkCartStatus(),
           checkBookStatus(),
-          checkAvailableCopies()
+          checkAvailableCopies(),
         ]);
       } catch (error) {
-        console.error('Error loading book data:', error);
+        console.error("Error loading book data:", error);
       }
     };
 
@@ -227,11 +223,14 @@ export default function AboutBook() {
   const handleAddToCart = async () => {
     if (!book || !userId || !token) return;
     if (bookStatus) {
-      Alert.alert('Cannot Add to Cart', `This book is already ${bookStatus}. You cannot add it to your cart.`);
+      Alert.alert(
+        "Cannot Add to Cart",
+        `This book is already ${bookStatus}. You cannot add it to your cart.`
+      );
       return;
     }
     if (availableCopies <= 0) {
-      Alert.alert('Cannot Add to Cart', 'This book is currently unavailable.');
+      Alert.alert("Cannot Add to Cart", "This book is currently unavailable.");
       return;
     }
     setAddingToCart(true);
@@ -242,18 +241,20 @@ export default function AboutBook() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setIsInCart(true);
-      // Update available copies after adding to cart
-      setAvailableCopies(prev => Math.max(0, prev - 1));
-      Alert.alert('Success', 'Book added to cart', [
-        { text: 'Go to Cart', onPress: () => router.push('/(app)/screens/cart') },
-        { text: 'OK' }
+      setAvailableCopies((prev) => Math.max(0, prev - 1));
+      Alert.alert("Success", "Book added to cart", [
+        {
+          text: "Go to Cart",
+          onPress: () => router.push("/(app)/screens/cart"),
+        },
+        { text: "OK" },
       ]);
     } catch (err) {
-      console.error('Error adding to cart:', err);
+      console.error("Error adding to cart:", err);
       if (err.response?.status === 400) {
-        Alert.alert('Error', 'Book is already in your cart');
+        Alert.alert("Error", "Book is already in your cart");
       } else {
-        Alert.alert('Error', 'Failed to add book to cart');
+        Alert.alert("Error", "Failed to add book to cart");
       }
     } finally {
       setAddingToCart(false);
@@ -267,7 +268,9 @@ export default function AboutBook() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text style={{ marginTop: 10, color: "#3b82f6" }}>Loading book details...</Text>
+        <Text style={{ marginTop: 10, color: "#3b82f6" }}>
+          Loading book details...
+        </Text>
       </View>
     );
   }
@@ -357,7 +360,7 @@ export default function AboutBook() {
               <Text style={styles.bookInfo}>
                 {availableCopies > 0
                   ? `Available Copies: ${availableCopies}`
-                  : 'Total Copies: Unavailable'}
+                  : "Total Copies: Unavailable"}
               </Text>
             </View>
 
@@ -376,27 +379,35 @@ export default function AboutBook() {
                 </View>
               </View>
             )}
-
           </View>
 
           <TouchableOpacity
             style={[
               styles.bookingButton,
-              (isInCart || bookStatus || availableCopies <= 0) && styles.bookingButtonDisabled,
-              addingToCart && styles.bookingButtonLoading
+              (isInCart || bookStatus || availableCopies <= 0) &&
+                styles.bookingButtonDisabled,
+              addingToCart && styles.bookingButtonLoading,
             ]}
             onPress={handleAddToCart}
-            disabled={isInCart || addingToCart || bookStatus || availableCopies <= 0}
+            disabled={
+              isInCart || addingToCart || bookStatus || availableCopies <= 0
+            }
           >
             {addingToCart ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text style={styles.bookingButtonText}>
-                {bookStatus === 'borrowed' ? 'Already Borrowed' :
-                  bookStatus === 'reserved' ? 'Already Reserved' :
-                    bookStatus === 'pending' ? 'Pending Approval' :
-                      availableCopies <= 0 ? 'Unavailable' :
-                        isInCart ? 'In Cart' : 'Add to Book Cart'}
+                {bookStatus === "borrowed"
+                  ? "Already Borrowed"
+                  : bookStatus === "reserved"
+                  ? "Already Reserved"
+                  : bookStatus === "pending"
+                  ? "Pending Approval"
+                  : availableCopies <= 0
+                  ? "Unavailable"
+                  : isInCart
+                  ? "In Cart"
+                  : "Add to Book Cart"}
               </Text>
             )}
           </TouchableOpacity>
@@ -527,8 +538,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
     minWidth: 160,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   bookingButtonDisabled: {
     backgroundColor: "#93c5fd",

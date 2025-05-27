@@ -11,6 +11,7 @@ import {
 import axios from "axios";
 import { API_BASE_URL } from "@env";
 import { useAuth } from "../../../context/AuthContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -53,70 +54,75 @@ export default function BorrowingHistoryScreen() {
   }, {});
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={fetchHistory} />
-      }
+    <SafeAreaView
+      style={{ flexGrow: 1, backgroundColor: "white" }}
+      edges={["top"]}
     >
-      {/* New Header Section */}
-      <View style={styles.topHeader}>
-        <Text style={styles.title}>Borrowing History</Text>
-        <Text style={styles.subtitle}>
-          A timeline of your past and current book borrowings
-        </Text>
-      </View>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={fetchHistory} />
+        }
+      >
+        {/* New Header Section */}
+        <View style={styles.topHeader}>
+          <Text style={styles.title}>Borrowing History</Text>
+          <Text style={styles.subtitle}>
+            A timeline of your past and current book borrowings
+          </Text>
+        </View>
 
-      <View style={styles.headerRow}>
-        <Text style={styles.sortText}>↓ Sorted by newest</Text>
-      </View>
+        <View style={styles.headerRow}>
+          <Text style={styles.sortText}>↓ Sorted by newest</Text>
+        </View>
 
-      {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#0078D7"
-          style={{ marginTop: 50 }}
-        />
-      ) : history.length === 0 ? (
-        <Text style={styles.emptyText}>You have no borrowing history.</Text>
-      ) : (
-        Object.entries(groupedByMonth).map(([month, items]) => (
-          <View key={month} style={styles.monthSection}>
-            <View style={styles.monthHeaderRow}>
-              <Text style={styles.monthHeader}>{month}</Text>
-              <Text style={styles.sortSubtext}>↑ Newest first</Text>
-            </View>
-
-            {items.map((item, index) => (
-              <View key={index} style={styles.timelineItem}>
-                <View style={styles.dot} />
-                <View style={styles.itemContent}>
-                  <Text style={styles.title}>{item.title}</Text>
-                  <Text style={styles.meta}>
-                    <Text style={styles.label}>Author:</Text>{" "}
-                    {item.author || "N/A"}
-                  </Text>
-                  <Text style={styles.meta}>
-                    <Text style={styles.label}>{item.tag}:</Text>{" "}
-                    {new Date(item.activity_date).toDateString()}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.badge,
-                      item.tag === "Reserved"
-                        ? styles.badgeWarning
-                        : styles.badgeSecondary,
-                    ]}
-                  >
-                    {item.tag}
-                  </Text>
-                </View>
+        {loading ? (
+          <ActivityIndicator
+            size="large"
+            color="#0078D7"
+            style={{ marginTop: 50 }}
+          />
+        ) : history.length === 0 ? (
+          <Text style={styles.emptyText}>You have no borrowing history.</Text>
+        ) : (
+          Object.entries(groupedByMonth).map(([month, items]) => (
+            <View key={month} style={styles.monthSection}>
+              <View style={styles.monthHeaderRow}>
+                <Text style={styles.monthHeader}>{month}</Text>
+                <Text style={styles.sortSubtext}>↑ Newest first</Text>
               </View>
-            ))}
-          </View>
-        ))
-      )}
-    </ScrollView>
+
+              {items.map((item, index) => (
+                <View key={index} style={styles.timelineItem}>
+                  <View style={styles.dot} />
+                  <View style={styles.itemContent}>
+                    <Text style={styles.title}>{item.title}</Text>
+                    <Text style={styles.meta}>
+                      <Text style={styles.label}>Author:</Text>{" "}
+                      {item.author || "N/A"}
+                    </Text>
+                    <Text style={styles.meta}>
+                      <Text style={styles.label}>{item.tag}:</Text>{" "}
+                      {new Date(item.activity_date).toDateString()}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.badge,
+                        item.tag === "Reserved"
+                          ? styles.badgeWarning
+                          : styles.badgeSecondary,
+                      ]}
+                    >
+                      {item.tag}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ))
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -138,7 +144,7 @@ const styles = StyleSheet.create({
   },
   sortText: {
     fontSize: 12,
-    color: "#888",
+    color: "#6C757D",
     textAlign: "right",
   },
   emptyText: {
@@ -163,7 +169,7 @@ const styles = StyleSheet.create({
   },
   sortSubtext: {
     fontSize: 12,
-    color: "#888",
+    color: "#6C757D",
   },
   timelineItem: {
     flexDirection: "row",
@@ -171,7 +177,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingLeft: 16,
     borderLeftWidth: 2,
-    borderColor: "#ccc",
+    borderColor: "white",
     position: "relative",
   },
   dot: {
@@ -214,11 +220,10 @@ const styles = StyleSheet.create({
   },
   badgeSecondary: {
     backgroundColor: "#6C757D",
-    color: "#fff",
+    color: "white",
   },
   topHeader: {
-    paddingVertical: 20,
-    paddingHorizontal: 16,
+    padding: 10,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },

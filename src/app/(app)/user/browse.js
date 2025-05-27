@@ -10,6 +10,7 @@ import {
   Alert,
   Dimensions,
   Image,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import RNPickerSelect from "react-native-picker-select";
@@ -73,6 +74,7 @@ const UserBrowse = () => {
   const [smartResults, setSmartResults] = useState([]);
   const [expandedResultIndex, setExpandedResultIndex] = useState(null);
   const [searchMode, setSearchMode] = useState("traditional");
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -102,6 +104,12 @@ const UserBrowse = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
   };
 
   useEffect(() => {
@@ -179,7 +187,14 @@ const UserBrowse = () => {
           field.value &&
           String(field.value).toLowerCase().includes(searchTerm.toLowerCase())
         ) {
-          if (!results.some(r => r.type === field.type && r.value === field.value && r.book.id === book.id)) {
+          if (
+            !results.some(
+              (r) =>
+                r.type === field.type &&
+                r.value === field.value &&
+                r.book.id === book.id
+            )
+          ) {
             results.push({ type: field.type, value: field.value, book });
           }
         }
@@ -191,11 +206,13 @@ const UserBrowse = () => {
 
   function highlightText(text, searchTerm) {
     if (!searchTerm || !text) return text;
-    const regex = new RegExp(`(${searchTerm})`, 'ig');
+    const regex = new RegExp(`(${searchTerm})`, "ig");
     const parts = String(text).split(regex);
     return parts.map((part, i) =>
       regex.test(part) ? (
-        <Text key={i} style={{ backgroundColor: '#ffe066', color: '#222' }}>{part}</Text>
+        <Text key={i} style={{ backgroundColor: "#ffe066", color: "#222" }}>
+          {part}
+        </Text>
       ) : (
         <Text key={i}>{part}</Text>
       )
@@ -212,7 +229,7 @@ const UserBrowse = () => {
     } catch (err) {
       console.error("Failed to record recently viewed:", err);
     }
-    router.push({ pathname: '/(app)/screens/about', params: { id: bookId } });
+    router.push({ pathname: "/(app)/screens/about", params: { id: bookId } });
   };
 
   if (loading && Object.keys(booksByGenre).length === 0) {
@@ -239,18 +256,32 @@ const UserBrowse = () => {
     : Object.keys(booksByGenre);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.container}>
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <View style={styles.headerContainer}>
             <Text style={styles.headerTitle}>Start Your Reading Journey</Text>
-            <Text style={styles.headerSubtitle}>Find books by genre or search for specific titles, authors, or publishers.</Text>
+            <Text style={styles.headerSubtitle}>
+              Find books by genre or search for specific titles, authors, or
+              publishers.
+            </Text>
           </View>
 
           <View style={styles.searchBarRow}>
             <View style={{ flex: 1 }}>
               <View style={styles.searchInputContainer}>
-                <IconButton icon="magnify" size={22} color="#666" style={styles.searchIcon} />
+                <IconButton
+                  icon="magnify"
+                  size={22}
+                  color="#666"
+                  style={styles.searchIcon}
+                />
                 <TextInput
                   placeholder="Search by title, author, ISBN, publisher..."
                   style={styles.input}
@@ -279,7 +310,7 @@ const UserBrowse = () => {
             <View style={styles.searchModeToggle}>
               <IconButton
                 icon="book-open-variant"
-                size={22}
+                size={20}
                 color={searchMode === "traditional" ? "#3b82f6" : "#666"}
                 style={[
                   styles.toggleButton,
@@ -290,7 +321,7 @@ const UserBrowse = () => {
               />
               <IconButton
                 icon="lightbulb-on-outline"
-                size={22}
+                size={20}
                 color={searchMode === "smart" ? "#3b82f6" : "#666"}
                 style={[
                   styles.toggleButton,
@@ -306,21 +337,33 @@ const UserBrowse = () => {
             <View style={styles.smartResultsContainer}>
               <Text style={styles.smartResultsTitle}>Smart Search Results</Text>
               <Text style={styles.smartResultsDescription}>
-                Smart search finds matches in title, author, ISBN, barcode, published date, and publisher.
+                Smart search finds matches in title, author, ISBN, barcode,
+                published date, and publisher.
               </Text>
               {searchTerm.length > 0 && smartResults.length > 0 ? (
                 smartResults.map((result, idx) => (
                   <View key={idx}>
                     <TouchableOpacity
                       style={styles.smartResultRow}
-                      onPress={() => setExpandedResultIndex(idx === expandedResultIndex ? null : idx)}
+                      onPress={() =>
+                        setExpandedResultIndex(
+                          idx === expandedResultIndex ? null : idx
+                        )
+                      }
                     >
                       <Text style={styles.smartResultType}>{result.type}:</Text>
-                      <Text style={styles.smartResultValue}>{highlightText(result.value, searchTerm)}</Text>
+                      <Text style={styles.smartResultValue}>
+                        {highlightText(result.value, searchTerm)}
+                      </Text>
                     </TouchableOpacity>
                     {expandedResultIndex === idx && (
                       <View style={styles.smartResultBookContainer}>
-                        <BookCard book={result.book} onPress={() => handleBookPress(result.book.id)} searchTerm={searchTerm} fullWidth />
+                        <BookCard
+                          book={result.book}
+                          onPress={() => handleBookPress(result.book.id)}
+                          searchTerm={searchTerm}
+                          fullWidth
+                        />
                       </View>
                     )}
                   </View>
@@ -348,7 +391,12 @@ const UserBrowse = () => {
                     }))}
                     style={pickerSelectStyles}
                     Icon={() => (
-                      <IconButton icon="chevron-down" size={20} color="#666" style={styles.pickerIcon} />
+                      <IconButton
+                        icon="chevron-down"
+                        size={20}
+                        color="#666"
+                        style={styles.pickerIcon}
+                      />
                     )}
                   />
                 </View>
@@ -358,7 +406,15 @@ const UserBrowse = () => {
                 const books = booksByGenre[genre] || [];
 
                 if (books.length === 0) {
-                  return null;
+                  return (
+                    <View key={genre} style={styles.genreSection}>
+                      <Text style={styles.genreTitle}>{genre}</Text>
+                      <Text style={styles.noBooksText}>
+                        No books available in the "{genre}" genre.
+                      </Text>
+                      <View style={styles.divider} />
+                    </View>
+                  );
                 }
 
                 return (
@@ -370,7 +426,11 @@ const UserBrowse = () => {
                       contentContainerStyle={styles.booksRow}
                     >
                       {books.map((book) => (
-                        <BookCard key={book.id} book={book} onPress={() => handleBookPress(book.id)} />
+                        <BookCard
+                          key={book.id}
+                          book={book}
+                          onPress={() => handleBookPress(book.id)}
+                        />
                       ))}
                     </ScrollView>
                     <View style={styles.divider} />
@@ -388,10 +448,10 @@ const UserBrowse = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#A9DEFF",
+    backgroundColor: "white",
   },
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: "#A9DEFF",
     padding: 10,
   },
@@ -403,11 +463,11 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   scrollView: {
-    flex: 1,
+    flexGrow: 1,
   },
   headerContainer: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 10,
     paddingBottom: 12,
     backgroundColor: "#A9DEFF",
   },
@@ -422,11 +482,11 @@ const styles = StyleSheet.create({
     color: "#555",
     fontWeight: "400",
   },
-
   searchBarRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 5,
+    padding: 5,
     gap: 8,
   },
   searchInputContainer: {
@@ -461,7 +521,6 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     borderRadius: 8,
-
   },
   toggleButtonActive: {
     backgroundColor: "#e0e7ff",
@@ -565,45 +624,45 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 2,
-    backgroundColor: '#fff',
+    backgroundColor: "#888",
     marginTop: 16,
     marginHorizontal: 8,
   },
   smartResultsContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#f9fafb",
     borderRadius: 12,
     marginTop: 12,
     marginBottom: 8,
     padding: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },
   smartResultsTitle: {
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 15,
     marginBottom: 6,
-    color: '#3b82f6',
+    color: "#3b82f6",
   },
   smartResultRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   smartResultType: {
-    fontWeight: '600',
-    color: '#555',
+    fontWeight: "600",
+    color: "#555",
     marginRight: 6,
   },
   smartResultValue: {
-    fontWeight: '400',
-    color: '#222',
+    fontWeight: "400",
+    color: "#222",
     flex: 1,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   smartResultBookContainer: {
     marginVertical: 8,
@@ -612,6 +671,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#555",
     marginBottom: 8,
+  },
+  noBooksText: {
+    fontSize: 14,
+    color: "#666",
+    fontStyle: "italic",
+    marginVertical: 10,
+    paddingHorizontal: 10,
   },
 });
 

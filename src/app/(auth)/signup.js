@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  StatusBar,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -16,6 +15,9 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
+import { Dimensions } from "react-native";
+
+const { width, height } = Dimensions.get("window");
 
 export default function LibraryUserSignup() {
   const router = useRouter();
@@ -107,9 +109,7 @@ export default function LibraryUserSignup() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <TouchableOpacity onPress={goBack} style={styles.backButton}>
         <Ionicons name="arrow-back" size={28} color="#3b82f6" />
       </TouchableOpacity>
@@ -283,43 +283,44 @@ export default function LibraryUserSignup() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "flex-start",
-    backgroundColor: "white",
-    padding: 24,
+    backgroundColor: "#fff",
+    paddingTop: 40,
+    paddingHorizontal: 24,
   },
   backButton: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 20 : 10,
-    left: 16,
-    zIndex: 1,
-    padding: 8,
+    marginBottom: 10,
+    alignSelf: "flex-start",
   },
   innerContainer: {
     flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
+    justifyContent: "center",
   },
   logoContainer: {
     alignItems: "center",
-    paddingTop: 20,
-  },
-  logoText: {
-    width: 170,
-    height: 60,
-    marginBottom: 10,
+    marginBottom: 30,
   },
   logoImage: {
-    width: 130,
-    height: 130,
+    width: width * 0.3,
+    height: width * 0.3,
+    marginBottom: 10,
+  },
+  logoText: {
+    width: width * 0.5,
+    height: height * 0.07,
   },
   logoOfficial: {
-    width: 200,
-    height: 100,
+    width: width * 0.55,
+    height: width * 0.25,
+  },
+  logoOfficialContainer: {
+    alignItems: "center",
   },
   formContainer: {
+    flex: 1,
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
+    paddingBottom: 20,
   },
   inputWrapper: {
     padding: 20,
@@ -332,14 +333,10 @@ const styles = StyleSheet.create({
     position: "relative",
     marginBottom: 14,
   },
-  logoOfficialContainer: {
-    marginVertical: -15,
-    alignItems: "center",
-  },
   iconContainer: {
     position: "absolute",
     left: 12,
-    top: 14,
+    top: 10,
     zIndex: 1,
   },
   passwordIcon: {

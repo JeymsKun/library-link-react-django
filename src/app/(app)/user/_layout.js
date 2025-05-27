@@ -64,7 +64,14 @@ export default function UserLayout() {
               iconName = "dots-horizontal-circle";
             }
 
-            return <IconButton icon={iconName} size={20} iconColor={color} />;
+            return (
+              <IconButton
+                icon={iconName}
+                size={20}
+                iconColor={color}
+                rippleColor="rgba(0,0,0,0.1)"
+              />
+            );
           },
           tabBarActiveTintColor: theme.colors.primary,
           tabBarInactiveTintColor: "gray",
@@ -76,14 +83,12 @@ export default function UserLayout() {
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.1,
             shadowRadius: 6,
-            height: 60,
-            paddingBottom: Platform.OS === "ios" ? 20 : 10,
+            paddingBottom: Platform.OS === "ios" ? 20 : 5,
             display: isKeyboardVisible ? "none" : "flex",
           },
           tabBarLabelStyle: {
             fontSize: 12,
             fontWeight: "600",
-            paddingBottom: Platform.OS === "ios" ? 0 : 10,
           },
           headerShown: route.name === "index" || route.name === "more",
           header: ({ route, options }) => {

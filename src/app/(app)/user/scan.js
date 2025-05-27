@@ -1,9 +1,3 @@
-// BarcodeScan.tsx (Improved UX - Full Detail View + Borrow/Return Button)
-
-// NOTE: Ensure you have API endpoints:
-// POST /user/:user_id/borrow/ { book_id }
-// POST /user/:user_id/return/ { book_id }
-
 import React, { useRef, useEffect, useState } from "react";
 import {
   SafeAreaView,
@@ -19,7 +13,7 @@ import {
   ScrollView,
   Image,
   RefreshControl,
-  StatusBar,
+  Modal,
   Alert,
 } from "react-native";
 import { CameraView } from "expo-camera";
@@ -27,10 +21,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../../context/AuthContext";
 import { API_BASE_URL } from "@env";
 import axios from "axios";
+import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window");
 
 export default function BarcodeScan() {
+  const router = useRouter();
   const { userId, token } = useAuth();
   const [showBookInfo, setShowBookInfo] = useState(false);
   const [manualBarcode, setManualBarcode] = useState("");
@@ -41,6 +38,18 @@ export default function BarcodeScan() {
   const [refreshing, setRefreshing] = useState(false);
   const [errorVisible, setErrorVisible] = useState(false);
   const [bookStatus, setBookStatus] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [showFullDetails, setShowFullDetails] = useState(false);
+  const [isFocused, setIsFocused] = useState(true);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setScanning(true);
+      return () => {
+        setScanning(false);
+      };
+    }, [])
+  );
 
   const fetchBookInfo = async (barcode) => {
     const response = await fetch(
@@ -96,19 +105,20 @@ export default function BarcodeScan() {
     outputRange: [0, height * 0.4],
   });
 
-  const handleBarcodeScanned = (data) => {
+  const handleBarcodeScanned = ({ data }) => {
     if (scanning && data) {
       setScanning(false);
       setManualBarcode("");
       setBarcode(data);
       setShowBookInfo(true);
+      setModalVisible(true);
     }
   };
-
   const handleManualInput = () => {
     if (manualBarcode.trim()) {
       setBarcode(manualBarcode.trim());
       setShowBookInfo(true);
+      setModalVisible(true);
       manualInputRef.current?.blur();
     }
   };
@@ -154,106 +164,152 @@ export default function BarcodeScan() {
     }
   };
 
+  const handleBook = () => {
+    router.push({
+      pathname: "../screens/about",
+      params: { id: bookInfo?.id, showFullDetails },
+    });
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <SafeAreaView
+      edges={["top", "bottom"]}
+      style={{ flex: 1, backgroundColor: "white" }}
     >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <StatusBar barStyle="dark-content" />
-        <Text style={styles.instructionText}>
-          Scan a barcode or enter it manually
-        </Text>
-
-        <View style={styles.camWrapper}>
-          <CameraView
-            style={StyleSheet.absoluteFill}
-            facing="back"
-            barcodeScannerSettings={{
-              barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e", "code128"],
-            }}
-            onBarcodeScanned={({ data }) => handleBarcodeScanned(data)}
-          />
-          <Animated.View
-            style={[styles.scanLine, { transform: [{ translateY }] }]}
-          />
-          <View style={styles.overlay}>
-            <View style={[styles.corner, styles.topLeft]} />
-            <View style={[styles.corner, styles.topRight]} />
-            <View style={[styles.corner, styles.bottomLeft]} />
-            <View style={[styles.corner, styles.bottomRight]} />
-          </View>
-        </View>
-
-        <View style={styles.manualInputRow}>
-          <TextInput
-            ref={manualInputRef}
-            style={styles.input}
-            value={manualBarcode}
-            onChangeText={setManualBarcode}
-            placeholder="Enter barcode manually"
-            returnKeyType="done"
-            onSubmitEditing={handleManualInput}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.button,
-            { backgroundColor: manualBarcode ? "#0078D7" : "#ccc" },
-          ]}
-          onPress={manualBarcode ? handleManualInput : handleRefresh}
+        <ScrollView
+          contentContainerStyle={styles.container}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.buttonText}>
-            {manualBarcode ? "Search" : "Reset"}
+          <Text style={styles.instructionText}>
+            Scan a barcode or enter it manually
           </Text>
-        </TouchableOpacity>
 
-        {errorVisible && (
-          <Text style={styles.errorText}>Book not found. Try again.</Text>
-        )}
+          <View style={styles.camWrapper}>
+            <CameraView
+              style={StyleSheet.absoluteFill}
+              facing="back"
+              barcodeScannerSettings={{
+                barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e", "code128"],
+              }}
+              onBarcodeScanned={
+                scanning && isFocused && !modalVisible
+                  ? handleBarcodeScanned
+                  : undefined
+              }
+            />
+            <Animated.View
+              style={[styles.scanLine, { transform: [{ translateY }] }]}
+            />
+            <View style={styles.overlay}>
+              <View style={[styles.corner, styles.topLeft]} />
+              <View style={[styles.corner, styles.topRight]} />
+              <View style={[styles.corner, styles.bottomLeft]} />
+              <View style={[styles.corner, styles.bottomRight]} />
+            </View>
+          </View>
 
-        {bookInfo && showBookInfo && (
-          <View style={styles.bookInfoContainer}>
-            {!!bookInfo.cover_image && (
-              <Image
-                source={{ uri: bookInfo.cover_image }}
-                style={styles.bookImage}
-              />
-            )}
-            <Text style={styles.bookTitle}>{bookInfo.title}</Text>
-            <Text style={styles.bookAuthor}>By: {bookInfo.author}</Text>
-            <Text style={styles.bookDetails}>Genre: {bookInfo.genre}</Text>
-            <Text style={styles.bookDetails}>ISBN: {bookInfo.isbn}</Text>
-            <Text style={styles.bookDetails}>
-              Published: {bookInfo.published_date}
+          <View style={styles.manualInputRow}>
+            <TextInput
+              ref={manualInputRef}
+              style={styles.input}
+              value={manualBarcode}
+              onChangeText={setManualBarcode}
+              placeholder="Enter barcode manually"
+              returnKeyType="done"
+              onSubmitEditing={handleManualInput}
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.button,
+              {
+                backgroundColor: manualBarcode ? "#0078D7" : "#3b82f6",
+              },
+            ]}
+            onPress={manualBarcode ? handleManualInput : handleRefresh}
+          >
+            <Text style={styles.buttonText}>
+              {manualBarcode ? "Search" : "Refresh"}
             </Text>
-            <Text style={styles.bookDescription}>{bookInfo.description}</Text>
+          </TouchableOpacity>
 
+          {errorVisible && (
+            <Text style={styles.errorText}>Book not found. Try again.</Text>
+          )}
+
+          {!scanning && !modalVisible && (
             <TouchableOpacity
               style={[
                 styles.button,
-                {
-                  backgroundColor:
-                    bookStatus === "borrowed" ? "#dc3545" : "#28a745",
-                },
+                { backgroundColor: "#0078D7", marginTop: 10 },
               ]}
-              onPress={handleBorrowOrReturn}
+              onPress={() => {
+                setBarcode("");
+                setScanning(true);
+                setShowBookInfo(false);
+              }}
             >
-              <Text style={styles.buttonText}>
-                {bookStatus === "borrowed" ? "Return Book" : "Borrow Book"}
-              </Text>
+              <Text style={styles.buttonText}>Scan Again</Text>
             </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+          )}
+
+          <Modal
+            visible={modalVisible}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.modalBackground}>
+              <View style={styles.modalContainer}>
+                <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+                  {!!bookInfo?.cover_image && (
+                    <Image
+                      source={{ uri: bookInfo.cover_image }}
+                      style={styles.bookImage}
+                    />
+                  )}
+                  <Text style={styles.bookTitle}>{bookInfo?.title}</Text>
+                  <Text style={styles.bookAuthor}>By: {bookInfo?.author}</Text>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.button,
+                      { backgroundColor: "#0078D7", marginTop: 20 },
+                    ]}
+                    onPress={handleBook}
+                  >
+                    <Text style={styles.buttonText}>About this Book</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.button,
+                      { backgroundColor: "#888", marginTop: 10 },
+                    ]}
+                    onPress={() => {
+                      setModalVisible(false);
+                      setShowFullDetails(false);
+                      setBarcode("");
+                      setScanning(true);
+                    }}
+                  >
+                    <Text style={styles.buttonText}>Close</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -263,7 +319,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#EAF6FF",
+    backgroundColor: "#A9DEFF",
   },
   camWrapper: {
     width: "100%",
@@ -379,6 +435,27 @@ const styles = StyleSheet.create({
     color: "#444",
   },
   bookDescription: {
+    fontSize: 14,
+    color: "#444",
+    marginTop: 10,
+    textAlign: "center",
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    width: "100%",
+    maxHeight: "80%",
+    padding: 20,
+    alignItems: "center",
+  },
+  modalText: {
     fontSize: 14,
     color: "#444",
     marginTop: 10,

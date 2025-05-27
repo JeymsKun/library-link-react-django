@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  StatusBar,
   Image,
   Alert,
   Platform,
@@ -67,8 +66,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <TouchableOpacity onPress={goBack} style={styles.backButton}>
         <Ionicons name="arrow-back" size={28} color="#3b82f6" />
       </TouchableOpacity>
@@ -131,15 +129,13 @@ export default function ForgotPassword() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    backgroundColor: "white",
   },
   backButton: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 20 : 10,
-    left: 16,
-    zIndex: 1,
-    padding: 8,
+    top: Platform.OS === "ios" ? 60 : 40,
+    left: 30,
+    zIndex: 10,
   },
   innerContainer: {
     flex: 1,

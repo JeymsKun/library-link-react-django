@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -13,11 +13,9 @@ import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../../../context/AuthContext";
 import axiosInstance from "../../../api/axiosInstance";
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import BookCard from "../../../components/BookCard";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 export default function UserDashboard() {
   const router = useRouter();
@@ -27,6 +25,9 @@ export default function UserDashboard() {
   const [favoriteBooks, setFavoriteBooks] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [currentView, setCurrentView] = useState("recent");
+
+  const [currentPage, setCurrentPage] = useState(0);
+  const scrollRef = useRef(null);
 
   const fetchRecentViewedBooks = async () => {
     if (!userId) return;
@@ -99,64 +100,95 @@ export default function UserDashboard() {
     favorite: "My Favorite",
   };
 
+  const handleTogglePress = (pageIndex) => {
+    setCurrentPage(pageIndex);
+    scrollRef.current?.scrollTo({ x: width * pageIndex, animated: true });
+  };
+
+  const onScrollEnd = (event) => {
+    const page = Math.round(event.nativeEvent.contentOffset.x / width);
+    setCurrentPage(page);
+  };
+
+  const renderBooksList = (books, emptyMessage) => {
+    if (books.length === 0) {
+      return (
+        <View style={styles.emptyMessageContainer}>
+          <Text style={styles.emptyMessageText}>{emptyMessage}</Text>
+        </View>
+      );
+    }
+
+    return (
+      <ScrollView
+        style={styles.booksList}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.bookGrid}>
+          {books.map((book) => (
+            <BookCard
+              key={book.id || book.books_id}
+              book={book}
+              onPress={() => handleBookPress(book.id || book.books_id)}
+              style={styles.bookCard}
+            />
+          ))}
+        </View>
+      </ScrollView>
+    );
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+    <View style={styles.container}>
+      {/* Toggle Buttons */}
       <View style={styles.toggleContainer}>
-        {allViews.map((view) => (
+        {allViews.map((view, i) => (
           <TouchableOpacity
             key={view}
             style={[
               styles.toggleButton,
-              currentView === view && styles.toggleButtonActive,
+              currentPage === i && styles.toggleButtonActive,
             ]}
-            onPress={() => setCurrentView(view)}
+            onPress={() => handleTogglePress(i)}
           >
             <Text
               style={[
                 styles.toggleButtonText,
-                currentView === view && styles.toggleButtonTextActive,
+                currentPage === i && styles.toggleButtonTextActive,
               ]}
               numberOfLines={1}
             >
               {titles[view]}
             </Text>
-            {currentView === view && <View style={styles.activeIndicator} />}
+            {currentPage === i && <View style={styles.activeIndicator} />}
           </TouchableOpacity>
         ))}
       </View>
+
       <ScrollView
-        contentContainerStyle={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={onScrollEnd}
+        style={{ flex: 1 }}
       >
-        <View style={styles.contentContainer}>
-          {currentBooks.length === 0 ? (
-            <View style={styles.emptyMessageContainer}>
-              <Text style={styles.emptyMessageText}>
-                {currentView === "favorite"
-                  ? "You have no favorite books yet."
-                  : currentView === "pending"
-                  ? "You have no pending books."
-                  : "No recently viewed books found."}
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.bookGrid}>
-              {currentBooks.map((book) => (
-                <BookCard
-                  key={book.id || book.books_id}
-                  book={book}
-                  onPress={() => handleBookPress(book.id || book.books_id)}
-                  style={styles.bookCard}
-                />
-              ))}
-            </View>
-          )}
+        <View style={styles.page}>
+          {renderBooksList(recentBooks, "No recently viewed books found.")}
+        </View>
+
+        <View style={styles.page}>
+          {renderBooksList(pendingBooks, "You have no pending books.")}
+        </View>
+
+        <View style={styles.page}>
+          {renderBooksList(favoriteBooks, "You have no favorite books yet.")}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -167,13 +199,12 @@ const styles = StyleSheet.create({
   },
   toggleContainer: {
     flexDirection: "row",
-    backgroundColor: '#ffffff',
-    paddingTop: Platform.OS === 'ios' ? height * 0.005 : height * 0.01,
+    backgroundColor: "#ffffff",
     paddingBottom: height * 0.01,
     paddingHorizontal: width * 0.02,
-    justifyContent: 'space-evenly',
+    justifyContent: "space-evenly",
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
+    borderBottomColor: "#e5e5e5",
   },
   toggleButton: {
     flex: 1,
@@ -182,11 +213,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    position: 'relative',
+    position: "relative",
     minWidth: width * 0.25,
   },
   toggleButtonActive: {
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
   },
   toggleButtonText: {
     color: "#666",
@@ -200,31 +231,32 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   activeIndicator: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -height * 0.01,
     left: width * 0.05,
     right: width * 0.05,
     height: 3,
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
     borderRadius: 1.5,
   },
-  scrollView: {
-    flexGrow: 1,
-  },
-  contentContainer: {
+  page: {
+    width,
     flex: 1,
-    paddingHorizontal: width * 0.04,
-    paddingTop: height * 0.02,
-    paddingBottom: Platform.OS === 'ios' ? height * 0.08 : height * 0.1,
+  },
+  booksList: {
+    flex: 1,
   },
   bookGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: width * 0.04,
+    paddingHorizontal: width * 0.04,
+    paddingTop: height * 0.02,
+    paddingBottom: Platform.OS === "ios" ? height * 0.08 : height * 0.1,
   },
   bookCard: {
     width: width * 0.44,
+    marginBottom: height * 0.015,
   },
   emptyMessageContainer: {
     flex: 1,

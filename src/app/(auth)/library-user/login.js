@@ -21,19 +21,13 @@ import { useAuth } from "../../../context/AuthContext";
 const { width, height } = Dimensions.get("window");
 
 export default function LibraryUserLogin() {
-  const { isAuthenticated, loginUser } = useAuth();
+  const { loginUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/(app)/user/");
-    }
-  }, [isAuthenticated]);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -100,7 +94,6 @@ export default function LibraryUserLogin() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <StatusBar style="light" />
       <TouchableOpacity onPress={goBack} style={styles.backButton}>
         <Ionicons name="arrow-back" size={28} color="#3b82f6" />
       </TouchableOpacity>
@@ -218,14 +211,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "white",
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   backButton: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 20 : 10,
-    left: 16,
-    zIndex: 1,
-    padding: 8,
+    top: Platform.OS === "ios" ? 60 : 40,
+    left: 30,
+    zIndex: 10,
   },
   keyboardAvoid: {
     flex: 1,

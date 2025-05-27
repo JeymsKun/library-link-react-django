@@ -1,4 +1,3 @@
-import React from "react";
 import {
   View,
   Text,
@@ -9,10 +8,9 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 export default function LoginOptionsPage() {
   const router = useRouter();
@@ -26,8 +24,7 @@ export default function LoginOptionsPage() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <View style={styles.contentContainer}>
         <View style={styles.logoContainer}>
           <Image
@@ -74,35 +71,35 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     justifyContent: "center",
-    paddingHorizontal: width * 0.06, 
-    paddingVertical: height * 0.02, 
+    paddingHorizontal: width * 0.06,
+    paddingVertical: height * 0.02,
   },
   logoContainer: {
     alignItems: "center",
     marginBottom: height * 0.04,
   },
   logoText: {
-    width: width * 0.4, 
-    height: height * 0.06, 
-    marginBottom: height * 0.02, 
+    width: width * 0.4,
+    height: height * 0.06,
+    marginBottom: height * 0.02,
   },
   logoImage: {
-    width: width * 0.35, 
-    height: width * 0.35, 
+    width: width * 0.35,
+    height: width * 0.35,
   },
   optionsContainer: {
     width: "100%",
-    marginVertical: height * 0.03, 
+    marginVertical: height * 0.03,
   },
   optionButtonUser: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#2DADFD",
-    paddingVertical: height * 0.02, 
-    paddingHorizontal: width * 0.05, 
+    paddingVertical: height * 0.02,
+    paddingHorizontal: width * 0.05,
     borderRadius: 12,
-    marginBottom: height * 0.02, 
+    marginBottom: height * 0.02,
     borderWidth: 1,
     borderColor: "#2DADFD",
     shadowColor: "#000",
@@ -113,10 +110,10 @@ const styles = StyleSheet.create({
   },
   optionButtonText: {
     flex: 1,
-    fontSize: Math.min(width, height) * 0.045, 
+    fontSize: Math.min(width, height) * 0.045,
     fontWeight: "600",
     color: "#fff",
-    marginLeft: width * 0.04, 
+    marginLeft: width * 0.04,
   },
   signupContainer: {
     flexDirection: "row",
@@ -125,20 +122,20 @@ const styles = StyleSheet.create({
     marginTop: height * 0.03,
   },
   signupText: {
-    fontSize: Math.min(width, height) * 0.04, 
+    fontSize: Math.min(width, height) * 0.04,
     color: "#666",
   },
   signupLinkText: {
-    fontSize: Math.min(width, height) * 0.04, 
+    fontSize: Math.min(width, height) * 0.04,
     fontWeight: "600",
     color: "#3b82f6",
-    marginLeft: width * 0.01, 
+    marginLeft: width * 0.01,
   },
   loginAsText: {
-    fontSize: Math.min(width, height) * 0.05, 
+    fontSize: Math.min(width, height) * 0.05,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: height * 0.025, 
+    marginBottom: height * 0.025,
     color: "#333",
   },
 });
